@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   mongo:
     image: mongo:latest
@@ -7,6 +8,32 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+
+  listener:
+    build: ./listener
+    container_name: encrypted_timeseries_listener
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/encrypted_timeseries
+    depends_on:
+      - mongo
+
+  emitter:
+    build: ./emitter
+    container_name: encrypted_timeseries_emitter
+    environment:
+      - LISTENER_HOST=listener
+      - LISTENER_PORT=3000
+    depends_on:
+      - listener
+
+  frontend:
+    build: ./frontend
+    container_name: encrypted_timeseries_frontend
+    ports:
+      - "8080:80"
 
 volumes:
   mongo_data:
