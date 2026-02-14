@@ -1,0 +1,6 @@
+node_modules
+.env
+.DS_Store
+mongo_data
+emitter.log
+listener.log

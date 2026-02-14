@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encrypted Timeseries Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: #4a4a4a;
+        }
+
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-box {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .stat-label {
+            color: #666;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        th,
+        td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .validation-success {
+            color: green;
+            font-weight: bold;
+        }
+
+        .validation-fail {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Encrypted Data Stream Dashboard</h1>
+
+    <div class="stats-container">
+        <div class="stat-box">
+            <div class="stat-value" id="total-messages">0</div>
+            <div class="stat-label">Total Messages</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value" id="valid-messages">0</div>
+            <div class="stat-label">Valid Messages</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value" id="success-rate">0%</div>
+            <div class="stat-label">Success Rate</div>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Name</th>
+                <th>Origin</th>
+                <th>Destination</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="data-table-body">
+            <!-- Rows will be added here -->
+        </tbody>
+    </table>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        const socket = io('http://localhost:3001'); // Listener Socket.io Port
+
+        const totalEl = document.getElementById('total-messages');
+        const validEl = document.getElementById('valid-messages');
+        const rateEl = document.getElementById('success-rate');
+        const tableBody = document.getElementById('data-table-body');
+
+        // Keep track of accumulated stats
+        let accumulatedTotal = 0;
+        let accumulatedValid = 0;
+
+        socket.on('connect', () => {
+            console.log('Connected to Listener Service');
+        });
+
+        socket.on('data-update', (data) => {
+            console.log('Received data:', data);
+
+            // Update Stats
+            accumulatedTotal += data.total;
+            accumulatedValid += data.validCount;
+
+            totalEl.innerText = accumulatedTotal;
+            validEl.innerText = accumulatedValid;
+
+            const rate = accumulatedTotal > 0 ? ((accumulatedValid / accumulatedTotal) * 100).toFixed(2) : 0;
+            rateEl.innerText = rate + '%';
+
+            // Update Table
+            data.messages.forEach(msg => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${new Date(msg.timestamp).toLocaleTimeString()}</td>
+                    <td>${msg.name}</td>
+                    <td>${msg.origin}</td>
+                    <td>${msg.destination}</td>
+                    <td class="validation-success">Validated</td>
+                `;
+
+                // Prepend to show newest first
+                tableBody.insertBefore(row, tableBody.firstChild);
+
+                // Limit table rows to prevent browser lag (e.g. keep last 100)
+                if (tableBody.children.length > 100) {
+                    tableBody.removeChild(tableBody.lastChild);
+                }
+            });
+        });
+
+        socket.on('disconnect', () => {
+            console.log('Disconnected from Listener Service');
+        });
+    </script>
+</body>
+
+</html>

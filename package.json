@@ -3,9 +3,13 @@
   "version": "1.0.0",
   "description": "Root package to manage services",
   "scripts": {
+    "install:all": "npm install && cd listener && npm install && cd ../emitter && npm install",
+    "install:listener": "cd listener && npm install",
     "install:emitter": "cd emitter && npm install",
+    "test": "cd listener && npx mocha",
+    "listener": "cd listener && node index.js",
     "emitter": "cd emitter && node index.js",
-    "docker": "docker-compose up -d mongo"
+    "mongo": "docker-compose up -d mongo"
   },
   "keywords": [],
   "author": "",
