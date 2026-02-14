@@ -1,0 +1,13 @@
+{
+  "name": "encrypted-timeseries-app",
+  "version": "1.0.0",
+  "description": "Root package to manage services",
+  "scripts": {
+    "install:emitter": "cd emitter && npm install",
+    "emitter": "cd emitter && node index.js",
+    "docker": "docker-compose up -d mongo"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
